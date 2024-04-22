@@ -1,0 +1,181 @@
+#!/bin/bash
+
+rMarkdown=$(cat <<EOF
+---
+title: "Classification of Written Characters"
+output: html_document
+---
+
+<style>
+@font-face {
+      font-family: 'Bebas Neue';
+      src: url('Fonts/BebasNeue-Regular.ttf') format('truetype');
+  }
+
+  @font-face {
+      font-family: "Arsenal";
+      src: url('Fonts/Arsenal-Regular.ttf') format('truetype');
+  }
+
+
+  h1 {  font-family: "Bebas Neue"; }
+
+  h3, h4, #names {  font-family: 'Arsenal'; }
+
+  body, .r, .plot {
+    background-color: #333;
+    color: #ccc;
+  }
+
+  pre {
+    background-color: #333 !important;
+    color: #ddd !important;
+  }
+
+</style>
+<p>Sam Hopkins</p>
+\`\`\`{python}
+#!/usr/bin/python
+
+# by Sam Hopkins
+
+import time
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sn
+
+from sklearn.datasets import fetch_openml
+from sklearn.cluster import KMeans
+from sklearn.metrics import confusion_matrix
+
+mnist = fetch_openml('mnist_784', version=1)
+
+# Randomly generate 60000 training/10000 testing indices
+# indices = np.random.permutation(len(mnist['target']))
+# trainingIndices = indices[:60000]
+# testingIndices = indices[60000:70000]
+
+# Split data into training and testing using random indices
+# Training = [mnist['data'].iloc[trainingIndices], mnist['target'].iloc[trainingIndices]]
+# Testing = [mnist['data'].iloc[testingIndices], mnist['target'].iloc[testingIndices]]
+
+# Split data into training and testing using known indices
+Training = [mnist['data'].iloc[:60000], mnist['target'].iloc[:60000]]
+Testing = [mnist['data'].iloc[60000:70000], mnist['target'].iloc[60000:70000]]
+
+# Training histogram
+plt.hist(np.sort(np.array(Training[1])), edgecolor='black')
+plt.xlabel('digit 0-9')
+plt.ylabel('number of images')
+plt.title('Training digit frequency')
+plt.show()
+
+# Testing histogram
+plt.hist(np.sort(np.array(Testing[1])), edgecolor='black')
+plt.xlabel('digit 0-9')
+plt.ylabel('number of images')
+plt.title('Testing digit frequency')
+plt.show()
+
+# Split training images into categories
+categories = [[] for i in range(10)]
+for i in range(len(Training[1])):
+  c = int(Training[1].iloc[i])
+  categories[c].append(Training[0].iloc[i])
+
+# Identify center images for 9 clusters for each of 10 categories (90 total center images)
+centerImages = [[] for i in range(10)]
+for c in range(len(categories)):
+    kmeans = KMeans(n_clusters=9, random_state=42)
+    kmeans.fit(categories[c])
+
+    clusterCenters = kmeans.cluster_centers_.reshape(-1, 28, 28)
+    centerImages[c] = clusterCenters
+    
+    # Display center images
+    fig, axes = plt.subplots(3, 3, figsize=(8, 8))
+    for i, a in enumerate(axes.flat):
+        a.imshow(clusterCenters[i], cmap='gray')
+        a.axis('off')
+        a.set_title(f'digit {c} cluster {i}')
+
+    plt.tight_layout()
+    plt.show()
+trainingImages = np.concatenate(centerImages)
+trainingImages = [image.reshape(-1) for image in trainingImages]
+testImages = []
+for i in range(len(Testing[0])):
+    testImages.append(Testing[0].iloc[i].values.reshape(-1))
+
+predictions = []
+
+predictedImages = []
+clusters = []
+
+time0 = time.time()
+for i in range(len(testImages)):
+    distances = np.linalg.norm(trainingImages - testImages[i], axis=1)
+
+    min = np.argmin(distances)
+    predictions.append(min // 9)
+        
+    predictedImages.append(trainingImages[min])
+    clusters.append(min % 9)
+    
+time1 = time.time()
+predTime = time1 - time0
+
+actual = np.array(Testing[1]).astype(int)
+
+accuracy = 0.0;
+for i in range(len(predictions)):
+    accuracy += 1.0 if actual[i] == predictions[i] else 0.0
+    
+accuracy /= len(predictions)/100
+
+confMatrix = confusion_matrix(actual, predictions)
+
+plt.figure(figsize=(8, 8))
+sn.heatmap(confMatrix, annot=True, fmt=".4g")
+
+plt.xlabel('true')
+plt.ylabel('predicted')
+plt.title(f"test accuracy {accuracy} %  prediction time {predTime:.2f} seconds")
+plt.show()
+\`\`\`
+<br>
+<h3>Extra Credit</h3>
+\`\`\`{python}
+for i in range(20):
+    testImage = testImages[i].reshape(28, 28)
+    closeCluster = predictedImages[i].reshape(28, 28)
+    fig, axes = plt.subplots(1, 2, figsize=(8, 8))
+        
+    axes[0].imshow(testImage, cmap='gray')
+    axes[0].axis('off')
+    axes[0].set_title(f'test {i} label {actual[i]} ')
+        
+    axes[1].imshow(closeCluster, cmap='gray')
+    axes[1].axis('off')
+    axes[1].set_title(f'closest digit {predictions[i]} cluster {clusters[i]}')
+
+    plt.tight_layout()
+    plt.show()
+
+\`\`\`
+
+EOF
+)
+
+
+function run_rMarkdown {
+
+  echo "$rMarkdown" > index.Rmd
+  Rscript -e "rmarkdown::render('index.Rmd')"
+  open index.html
+
+}
+
+run_rMarkdown
