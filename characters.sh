@@ -54,17 +54,17 @@ from sklearn.metrics import confusion_matrix
 mnist = fetch_openml('mnist_784', version=1)
 
 # Randomly generate 60000 training/10000 testing indices
-# indices = np.random.permutation(len(mnist['target']))
-# trainingIndices = indices[:60000]
-# testingIndices = indices[60000:70000]
+indices = np.random.permutation(len(mnist['target']))
+trainingIndices = indices[:60000]
+testingIndices = indices[60000:70000]
 
 # Split data into training and testing using random indices
-# Training = [mnist['data'].iloc[trainingIndices], mnist['target'].iloc[trainingIndices]]
-# Testing = [mnist['data'].iloc[testingIndices], mnist['target'].iloc[testingIndices]]
+Training = [mnist['data'].iloc[trainingIndices], mnist['target'].iloc[trainingIndices]]
+Testing = [mnist['data'].iloc[testingIndices], mnist['target'].iloc[testingIndices]]
 
 # Split data into training and testing using known indices
-Training = [mnist['data'].iloc[:60000], mnist['target'].iloc[:60000]]
-Testing = [mnist['data'].iloc[60000:70000], mnist['target'].iloc[60000:70000]]
+# Training = [mnist['data'].iloc[:60000], mnist['target'].iloc[:60000]]
+# Testing = [mnist['data'].iloc[60000:70000], mnist['target'].iloc[60000:70000]]
 
 # Training histogram
 plt.hist(np.sort(np.array(Training[1])), edgecolor='black')
