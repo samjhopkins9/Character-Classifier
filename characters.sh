@@ -2,7 +2,7 @@
 
 rMarkdown=$(cat <<EOF
 ---
-title: "Classification of Written Characters"
+title: "Character Classification"
 output: html_document
 ---
 
@@ -33,6 +33,7 @@ output: html_document
   }
 
 </style>
+<h3>Using images of written characters</h3>
 <p>Sam Hopkins</p>
 \`\`\`{python}
 #!/usr/bin/python
