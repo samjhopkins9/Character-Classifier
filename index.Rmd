@@ -144,7 +144,7 @@ plt.title(f"test accuracy {accuracy} %  prediction time {predTime:.2f} seconds")
 plt.show()
 ```
 <br>
-<h3>Extra Credit</h3>
+<h3>First 20 images tested vs predicted cluster center</h3>
 ```{python}
 for i in range(20):
     testImage = testImages[i].reshape(28, 28)
